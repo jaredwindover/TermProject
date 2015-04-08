@@ -1,9 +1,37 @@
 \documentclass{article}
 \usepackage{MathNotes}
 \begin{document}
-Hello World!
 
+
+\lstdefinestyle{BashStyle}{
+  language=bash,
+  frame=single,
+  tabsize=4,
+  breaklines=true}
+
+\lstset{
+  literate={~} {$\sim$}{1}
+}
+
+
+\section{Hello World!}
+
+\begin{algex}
+\begin{lstlisting}[style=BashStyle]
+dir = ~/cs246
+echo $(dir)
+
+\end{lstlisting}%$
+\end{algex}
+
+\begin{ex}
+\begin{lstlisting}[style=BashStyle]
+dir = ~/cs246
+echo $(dir)
+
+\end{lstlisting}%$
+\end{ex}
 $$
-x+ y = z
+x+ y \tilde = z
 $$
 \end{document}

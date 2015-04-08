@@ -56,6 +56,16 @@
 \newenvironment{claim}[1]{\par\noindent\underline{Claim:}\space#1}{}
 \newenvironment{claimproof}[1]{\par\noindent\underline{Proof:}\space#1}{\hfill $\blacksquare$}
 
+\newtheoremstyle{algo}    % <name>
+  {\topsep}               % <space above>
+  {\topsep}               % <space below>
+  {}                      % <body font>
+  {}                      % <indent amount>
+  {\bfseries}             % <theorem head font>
+  {.}                      % <punctuation after theorem head>
+  {\newline}              % <space after theorem head>
+  {}                      % <theorem head spec>
+
 \theoremstyle{plain}
 \newtheorem{thm}{Theorem}[section]
 \newtheorem{lem}[thm]{Lemma}
@@ -71,6 +81,9 @@
 \newtheorem*{rem}{Remark}
 \newtheorem*{note}{Note}
 \newtheorem{case}{Case}
+
+\theoremstyle{algo}
+\newtheorem{algex}[ex]{Example}
 
 
 \endinput

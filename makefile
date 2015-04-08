@@ -1,8 +1,23 @@
+PDF = pdflatex -interaction=errorstopmode
+
 all : Report.pdf Presentation.pdf
 
 %.pdf : %.tex MathNotes.sty
-	pdflatex $<
+	pdflatex $(basename $<)
+	-bibtex $(basename $<)
+	pdflatex $(basename $<)
+	pdflatex $(basename $<)
 
 .PHONY : clean
 clean :
-	rm *.aux *.nav *.log *.out *.snm *.toc *~
+	rm -f \
+	*.aux \
+	*.nav \
+	*.log \
+	*.out \
+	*.snm \
+	*.toc \
+	*.dvi \
+	*.bbl \
+	*.blg \
+	*~
