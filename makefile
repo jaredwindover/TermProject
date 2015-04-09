@@ -20,4 +20,8 @@ clean :
 	*.dvi \
 	*.bbl \
 	*.blg \
+	*-blx.bib\
+	*.run.xml\
 	*~
+clear : clean
+	rm -f *.pdf
