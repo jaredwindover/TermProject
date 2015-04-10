@@ -1,6 +1,9 @@
 PDF = pdflatex -interaction=errorstopmode
 
+.PHONY : clear clean all
 all : Report.pdf Presentation.pdf
+
+FIXDOLLARS = perl -p FixDollars.pl
 
 %.pdf : %.tex MathNotes.sty Report.bib
 	pdflatex $(basename $<)
@@ -8,9 +11,12 @@ all : Report.pdf Presentation.pdf
 	pdflatex $(basename $<)
 	pdflatex $(basename $<)
 
-.PHONY : clear clean
+%.tex : %.pre
+	${FIXDOLLARS} <$< > $@
+
 clean :
 	rm -f \
+	*.tex \
 	*.aux \
 	*.nav \
 	*.log \
