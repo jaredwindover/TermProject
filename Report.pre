@@ -69,8 +69,16 @@ Ontario, Canada\\
 
 \pagenumbering{arabic}
 
+\section*{Acknowledgment}
+\addcontentsline{toc}{section}{Acknoledgment}
+
 \section{Introduction}
 
+  Haskell is a functional programming language that is understood to be strongly related to category theory, an area of pure mathematics. The purpose of this paper is to elucidate the nature of that connection, and to what extent an understanding of Haskell is informed or improved by an understanding of category theory. A primer on category theory is presented, explaining the main notions and style of argument along with some elementary results. A primer on some fundamental ideas in Haskell as well as its syntax is also presented. The shared notions of functor, monoid and monad are examined within both contexts and compared. Motivations and implications of these structures in Haskell are discussed, with particular attention paid to the role of monads. 
+
+\section{Category Theory Primer}
+\subsection{Basic Concepts}
+\subsubsection{Commutative Diagrams}
 \begin{ex}
   \begin{equation}
     \begin{tikzcd}
@@ -87,33 +95,83 @@ Ontario, Canada\\
     \end{tikzcd}
   \end{equation}
 \end{ex}
+\subsubsection{Equivalence}
+\subsubsection{Monomorphisms and Epimorphisms}
 
-\section{Category Theory Primer}
-\subsection{Basic Concepts}
 \section{Haskell Primer}
 Haskell is an open-source, almost purely-functional programming language ~\parencite{WHO}. It was born in the late 1980's out of a desire for a common language for researchers to use in experiments on lazy evaluation ~\parencite{HOH}. Lazy evaluation was a new idea at the time, that calculations can and should in some cases only be performed when it is demonstrably necessary to do so. Haskell is a declarative language, meaning that what things are is specified rather than how things are to be done. Haskell being almost purely functional means, roughly, that a function's return value is independent of context. All that it may depend upon are the values that are passed to it. It may also be useful to think of Haskell's identifiers more like mathematical identifiers, rather than typical language constructs. The invocation of a mathematical function does not change depending on the context, or between subsequent invocations. Similarly, functions in a purely functional language will always return the same value dependent only on their parameters. It was found, however, that Haskell would be more useful if the purely functional abstraction was broken in a particular way, and this is why it is only almost purely functional. The language was named after Haskell Curry, an American mathematician whom the founders of the language felt had made significant contributions to their respective areas of study. 
 \subsection{Basic Syntax}
 While a ``Hello World'' program can often be instructive, in an introduction to Haskell, it may be more confusing than anything. Instead, the paper will finish by examining a ``Hello World'' program. Instead, consider the following code snippet:
+\subsubsection{Types}
 \begin{algex}
 \begin{lstlisting}[caption={Calculating the fibonacci numbers in Haskell}]
-    fib :: Integer -> Integer
-    fib 0 = 1
-    fib n = (fib $ n - 1) + (fib $ n - 2)
+  fib :: Integer -> Integer
+  fib 0 = 1
+  fib n = (fib $ n - 1) + (fib $ n - 2)
 \end{lstlisting}
 \end{algex}
-This is a complete Haskell function for calculating the $n$th fibonacci number. The first line specifies the type signature or contract of the function. In this case, \v|fib| is the name of the function, and its type signature follows the \v|::|. \v|fib| takes an \v|Integer| as argument and returns an \v|Integer|. Next, the program takes advantage of Haskell's pattern matching facilities to define the result of \v|fib| for two cases. If the argument to \v|fib| is \v|0|, the result is \v|1|. If the argument to \v|fib| is anything else, then \v|fib| is defined recursively as the sum of the previous two fibonacci numbers. The syntax should be clear, except for two potential areas of confusion. The first is that function invocations are done as \v|f x| rather than \v|f(x)| as is more common. So \v|(fib n)| is apply the \v|fib| function to the value \v|n| and is equivalent to \v|fib n|. The second potential confusion is the use of the \v|\d| operator. In Haskell, expressions bind to the left. So the expression \v|fib n - 1| is equivalent to \v|(fib n) - 1|. To write that function correctly using parentheses would require \v|fib (n - 1)|. The dollar sign, forces everything to the right of it to be evaluated before it is passed to the left. So \v|f \d x y z| is eqivalent to \v|f (x y z)| and \v|f \d x \d y \d z| is equivalent to \v|f (x (y (z)))|. Thus, the expression \v|(fib \d n - 1) + (fib \d n - 2)| is equivalent to \v|(fib (n - 1)) + (fib (n - 2))|. Now consider a slightly more complex (though trivial) function.
+This is a complete Haskell function for calculating the $n$th fibonacci number. The first line specifies the type signature or contract of the function. In this case, \v|fib| is the name of the function, and its type signature follows the \v|::|. \v|fib| takes an \v|Integer| as argument and returns an \v|Integer|. Next, the program takes advantage of Haskell's pattern matching facilities to define the result of \v|fib| for two cases. If the argument to \v|fib| is \v|0|, the result is \v|1|. If the argument to \v|fib| is anything else, then \v|fib| is defined recursively as the sum of the previous two fibonacci numbers. The syntax should be clear, except for two potential areas of confusion. The first is that function invocations are done as \v|f x| rather than \v|f(x)| as is more common. So \v|(fib n)| is apply the \v|fib| function to the value \v|n| and is equivalent to \v|fib n|. The second potential confusion is the use of the \v|\d| operator. In Haskell, expressions bind to the left. So the expression \v|fib n - 1| is equivalent to \v|(fib n) - 1|. To write that function correctly using parentheses would require \v|fib (n - 1)|. The dollar sign, forces everything to the right of it to be evaluated before it is passed to the left. So \v|f \d x y z| is eqivalent to \v|f (x y z)| and \v|f \d x \d y \d z| is equivalent to \v|f (x (y (z)))|. Thus, the expression \v|(fib \d n - 1) + (fib \d n - 2)| is equivalent to \v|(fib (n - 1)) + (fib (n - 2))|. 
+
+A function can depend on two variables by taking advantage of 
+
+Now consider a function with a slightly more complex type signature:
+\begin{algex}
+\begin{lstlisting}[caption={Applying a function in Haskell}]
+  apply :: (a -> b) -> a -> b
+\end{lstlisting}
+\end{algex}
+In this example, we have an aptly named function \v|apply| which will take a function mapping type \v|a| to type \v|b|, an object of type \v|a| and return an object of type \v|b|. Alternatively, this can be thought of as a function that will take a function of a certain type and return a function of the same type. The signature is equivalent to:
+\begin{lstlisting}
+  apply :: (a -> b) -> (a -> b)
+\end{lstlisting}
+As the name of the function suggests, one function that satisfies this type signature is the function that simply applies the function to its arguments.
+\begin{lstlisting}
+  apply :: (a -> b) -> a -> b
+  apply f x = f x
+\end{lstlisting}
+which can be written more concisely by considering the alternative interpretation of the type signature as:
+\begin{lstlisting}
+  apply :: (a -> b) -> (a -> b)
+  apply f = f
+\end{lstlisting}
+or even more concisely by taking advantage of the built in identity function \v|id|:
+\begin{lstlisting}
+  apply :: (a -> b) -> (a -> b)
+  apply = id
+\end{lstlisting}
+It should be noted that the type signature of \v|id| is \v|id :: a -> a|. \v|id| does not require its argument to be a function.
+
+
+\subsubsection{Type Signatures}
+\subsubsection{Functions}
+\subsubsection{Type Classes}
+
+\subsection{Lazy Evaluation}
+\subsubsection{Infinite Lists}
+Compare with generators in python
+\subsubsection{Efficient Fibonacci}
+Present a memoized version of the earlier fib function
+
+\section{Currying}
+\subsection{Currying in Category Theory}
+\subsection{Currying in Haskell}
+\subsection{Comparison of Currying}
+
 \section{Functors}
 \subsection{Functors in Category Theory}
 \subsection{Functors in Haskell}
 \subsection{Comparison of Functors}
+
 \section{Monoids}
 \subsection{Monoids in Category Theory}
 \subsection{Monoids in Haskell}
 \subsection{Comparison of Monoids}
+
 \section{Monads}
 \subsection{Monads in Category Theory}
 \subsection{Monads in Haskell}
 \subsection{Comparison of Monads}
+
 \section{Conclusion}
 
 \newpage
