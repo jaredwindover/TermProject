@@ -1,5 +1,4 @@
 % -*- compile-command: "make -B Report.pdf clean" -*-
-
 \documentclass{article}
 \usepackage{lipsum}
 \usepackage[nottoc,numbib]{tocbibind}
@@ -10,18 +9,21 @@ citestyle=numeric,
 sorting=nty
 ]{biblatex}
 \usepackage{tikz-cd}
+\usepackage{verbatim}
 \usepackage{MathNotes}
 
 %CONFIG
 \renewcommand*\contentsname{Summary}
 
+\renewcommand{\qedsymbol}{\square}
+
 \lstdefinestyle{Hask}{
-  language=Haskell,
+  language=bash,
   frame=single,
   tabsize=2,
   breaklines=false,
   captionpos=b,
-  mathescape=false
+  escapeinside={*'}{'*}
 }
 
 \lstset{
@@ -71,38 +73,183 @@ Ontario, Canada\\
 
 \section*{Acknowledgment}
 \addcontentsline{toc}{section}{Acknoledgment}
-
+I would like to thank Professor Jonathon Funk for suggesting this research project, meeting with me to discuss my progress and difficulties, and spending a large amount of time introducing me to category theory. This paper would not have been possible without his assistance.
 \section{Introduction}
 
   Haskell is a functional programming language that is understood to be strongly related to category theory, an area of pure mathematics. The purpose of this paper is to elucidate the nature of that connection, and to what extent an understanding of Haskell is informed or improved by an understanding of category theory. A primer on category theory is presented, explaining the main notions and style of argument along with some elementary results. A primer on some fundamental ideas in Haskell as well as its syntax is also presented. The shared notions of functor, monoid and monad are examined within both contexts and compared. Motivations and implications of these structures in Haskell are discussed, with particular attention paid to the role of monads. 
 
 \section{Category Theory Primer}
 \subsection{Basic Concepts}
+Isomorphism is an important concept in modern mathematics. It occurs in multiple areas of mathematics. To say two things are isomorphic is in some way saing that they have the same structure. A non-mathematical example of this would be lowercase letters and uppercase letters. They are different things, serving different purposes and being appropriate in different contexts. There is, however, a common structure between them. One aspect of this is the ordering on the lowercase or uppercase letter. Letters have precedent and/or antecedent letters. Using the obvious mapping between uppercase and lowercase letters (take the uppercase or lowercase of the same letter, $e \leftrightarrow E, h \leftrightarrow H$), this structure is preserved. If there is a lowercase letter with a precedent (e.g. $e$, preceded by $d$) and the uppercase version of its precedent is taken, ($D$), the result is the same as taking the precedent of the uppercase version (e.g. $e\rightarrow E \rightarrow D$). This idea can be made explicit with a commutative diagram.
 \subsubsection{Commutative Diagrams}
+
 \begin{ex}
   \begin{equation}
     \begin{tikzcd}
-      A \arrow[yshift=.7ex,r,"f"]
-      \arrow[yshift=-.7ex,r,swap,"g"]
+      e \arrow[r,"\text{precedent}"]
+      \arrow[d,swap,"\text{upper}"] 
       &
-      B \arrow[r,"\ep"]
-      \arrow[dr,swap,"h"]
-      &
-      C \arrow[densely dotted,d,"\not\exists"]
-      \\
-      & &
-      D
+      d \arrow[d,"\text{upper}"]\\
+      E \arrow[r,swap,"\text{precedent}"]& D
     \end{tikzcd}
   \end{equation}
 \end{ex}
-\subsubsection{Equivalence}
-\subsubsection{Monomorphisms and Epimorphisms}
+
+The way to interpret a commutative diagram is that any path of arrows from one point to another is equivalent to any other path between those points (provided that one of the paths has more than one arrow.) So for the above diagram, taking $e$'s precedent, $d$, and then $d$'s upper, $D$, is equivalent to taking $e$'s upper, $E$, and then $E$'s precedent, $D$. This can be generalized $l$ is allowed to represent all of the lowercase letters, and $U$ is allowed to represent all of the uppercase letters, and the following definitions are made: $\text{precedent}(a):= z$, and $\text{precedent}(A):=Z$. 
+
+\begin{equation}
+  \begin{tikzcd}
+    l \arrow[r,"\text{precedent}"]
+    \arrow[d,swap,"\text{upper}"] 
+    &
+    l \arrow[d,"\text{upper}"]\\
+    U \arrow[r,swap,"\text{precedent}"]& U
+  \end{tikzcd}
+\end{equation}
+
+That is to say, $\text{precedent}$ and $\text{upper}$ commute under composition. So $$\text{precedent} \circ \text{upper} = \text{upper} \circ \text{precedent}$$
+  
+By reformulating notions from one context into category theory's language of arrows gives new ways of examining problems, and understanding their structures.
+
+To formalize the previous discussion, category theory is concerned with two types of things, foundationally: objects and arrows. Objects can be anything, and are often (though not always) members of a set. Arrows are objects that have a head and a tail, and may not be fully determined by their head and tail. So, two different arrows may have the same head and tail. As well, if the following diagram exists within a category:
+
+\begin{equation}
+  \begin{tikzcd}
+    A \arrow[r,"f"] & B\arrow[r, "g"] & C
+  \end{tikzcd}
+\end{equation}
+then the arrow $h$ must also exist as:
+
+\begin{equation}
+  \begin{tikzcd}
+    A \arrow[r,"f"] \arrow[rr,bend left, "h"] & B\arrow[r, "g"] & C
+  \end{tikzcd}
+\end{equation}
+
+So for any two arrows such that the head of one is the tail of the other, the composition of those arrows must also be an arrow in the category.
+
+\subsubsection{Injectivity and Surjectivity}
+The notions of injectivity and surjectivity can be captured elegantly in a category theoretic way. A function, $f:X\rightarrow Y$ is injective iff $f(x) = f(y) \implies x = y$, and is surjective if $\forall y \in Y \exists x \in X : f(x) = y$, or $f(X) = Y$. 
+\begin{thm}
+$f:X\rightarrow Y$ is injective iff $\forall g,h:Z\rightarrow X$, $f\circ g = f\circ h \implies g = h$.
+\end{thm}
+\begin{proof}
+Suppose that $f$ is injective. Consider two functions $g,h:Z\rightarrow X$. Suppose that $f\circ g(z) = f\circ h(z) \ \forall z \in Z$, denoted more compactly as $f\circ g = f\circ h$. Let $z \in Z$. Then 
+\begin{align*}
+f\circ g (z) = f\circ h(z) &\implies f(g(z)) = f(h(z)) \\
+&\implies g(z) = h(z)\\
+\end{align*} 
+since $f$ is injective. 
+
+Now, suppose that $f$ is not injective. Then $\exists x_1,x_2 \in X: f(x_1) = f(x_2), x_1 \neq x_2$. Define the following functions:
+\begin{align*}
+g&:\{0\}\rightarrow\{x_1,x_2\}:(0)\mapsto x_1 \\
+h&:\{0\}\rightarrow\{x_1,x_2\}:(0)\mapsto x_2 \\
+\end{align*} 
+
+Then $f\circ g (0) = f(x_1) = f(x_2) = f\circ h (0)$. So $f\circ g = f\circ h$ but $g \neq h$.\qed
+\end{proof}
+\begin{thm}
+$f:X\rightarrow Y$ is surjective iff $\forall g,h:Y\rightarrow Z$, $g\circ f = h\circ f \implies g = h$.
+\end{thm}
+\begin{proof}
+Suppose that $f$ is surjective. Consider two functions, $g,h:Y\rightarrow Z$ such that $g \circ f = h \circ f$. Let $y \in Y$. Then $\exists x \in X$ such that $f(x) = y$. So 
+\begin{align*}
+  g(y) &= g(f(x))\\
+       &= g\circ f (x)\\
+       &= h\circ f (x)\\
+       &= h(f(x))\\
+       &= h(y)\\
+\end{align*}
+
+Thus, $g = h$.
+
+Now suppose that $f$ is not surjective. Then $\exists y_0 \in Y$, such that there is no $x\in X$ with $f(x) = y_0$. Define the following two functions:
+\begin{align*}
+g&:Y\rightarrow \{0,1\}:(y)\mapsto 0\\
+h&:Y\rightarrow \{0,1\}:(y)\mapsto\left\{
+\begin{array}{ll}
+1 & y = y_0\\
+0 & \text{otherwise}
+\end{array}
+\right.
+\end{align*}
+Then let $x \in X$.
+\begin{align*}
+  g\circ f (x) &=g (f (x))\\
+               &= g ( y) : y \neq y_0\\
+               &= 0 \\
+               &= h ( y) : y \neq y_0\\
+               &= h (f (x))\\
+               &= h \circ f (x)\\
+\end{align*}
+So $g\circ f = h\circ f$ but $h \neq g$.\qed
+\end{proof}
+
+With the preceding two theorems in hand, injectivity and surjectivity can be characterized in the following manner:
+
+$f:X\rightarrow Y$ is injective if
+\begin{equation*}
+  \begin{tikzcd}
+    Z \arrow[r,yshift=0.7ex,"g"]\arrow[r,swap,yshift=-0.7ex,"h"] 
+    & X \arrow[r,"f"]
+    & Y
+  \end{tikzcd}
+\end{equation*}
+
+implies that $g = h$.
+
+
+$f:X\rightarrow Y$ is surjective if
+\begin{equation*}
+  \begin{tikzcd}
+    X \arrow[r,"f"]
+    & Y \arrow[r,yshift=0.7ex,"g"]\arrow[r,swap,yshift=-0.7ex,"h"] 
+    & Z
+  \end{tikzcd}
+\end{equation*}
+
+implies that $g = h$. Thus, while the element-wise definitions do not make it clear the relationship between injectivity and surjectivity, or even that there is any kind of symmetry between them, the category theoretic definition demonstrates this symmetry.
 
 \section{Haskell Primer}
 Haskell is an open-source, almost purely-functional programming language ~\parencite{WHO}. It was born in the late 1980's out of a desire for a common language for researchers to use in experiments on lazy evaluation ~\parencite{HOH}. Lazy evaluation was a new idea at the time, that calculations can and should in some cases only be performed when it is demonstrably necessary to do so. Haskell is a declarative language, meaning that what things are is specified rather than how things are to be done. Haskell being almost purely functional means, roughly, that a function's return value is independent of context. All that it may depend upon are the values that are passed to it. It may also be useful to think of Haskell's identifiers more like mathematical identifiers, rather than typical language constructs. The invocation of a mathematical function does not change depending on the context, or between subsequent invocations. Similarly, functions in a purely functional language will always return the same value dependent only on their parameters. It was found, however, that Haskell would be more useful if the purely functional abstraction was broken in a particular way, and this is why it is only almost purely functional. The language was named after Haskell Curry, an American mathematician whom the founders of the language felt had made significant contributions to their respective areas of study. 
 \subsection{Basic Syntax}
 While a ``Hello World'' program can often be instructive, in an introduction to Haskell, it may be more confusing than anything. Instead, the paper will finish by examining a ``Hello World'' program. Instead, consider the following code snippet:
-\subsubsection{Types}
+
+\subsubsection{Type Signatures}
+
+Functions in Haskell are not required to have a type signature, however a type signature can help the code to self-document. The signature of a function gives important information about its usage, and combined with the name can often be enough information to understand what the function does. As an example of this, consider the type signature of \v|id|:
+
+\begin{algex}
+  \begin{lstlisting}
+    id :: a -> a
+  \end{lstlisting}
+\end{algex}
+
+This type signature is interpreted as, regardless of what type is passed to \v|id|, \v|id| will return a value of the same type. There is in fact only one function which will reliably do that, given that the function cannot have knowledge of what types are possible, and it is difficult to determine the type of an argument at runtime. This is the identity function which returns the argument it is given. We can, in fact, infer its implementation from its type signature!
+
+\begin{lstlisting}
+  id :: a -> a
+  id x = x
+\end{lstlisting}
+
+
+\subsubsection{Functions}
+
+
+A function can also return a function.
+
+\begin{algex}
+  \begin{lstlisting}
+    applyTwice (a -> a) -> (a -> a)
+  \end{lstlisting}
+\end{algex}
+
+This function takes an endofunction (a function from a type to the same type) and returns a new endofunction on the same type. The implementation is:
+\begin{lstlisting}
+  applyTwice f x = f $ f x
+\end{lstlisting}
+
 \begin{algex}
 \begin{lstlisting}[caption={Calculating the fibonacci numbers in Haskell}]
   fib :: Integer -> Integer
@@ -141,31 +288,56 @@ or even more concisely by taking advantage of the built in identity function \v|
 \end{lstlisting}
 It should be noted that the type signature of \v|id| is \v|id :: a -> a|. \v|id| does not require its argument to be a function.
 
-
-\subsubsection{Type Signatures}
-\subsubsection{Functions}
 \subsubsection{Type Classes}
+Type classes are similar to interfaces in other language. They allow guarantees to be made about types that are not as strict as specifying the type. An instructive example is considering equality testing. There are lots of types for which it is meaningful to test whether or not instances of those types are equal. Numbers, characters and strings jump to mind. A stream type, however, might not be meaningful to test equality (though it might). To use \v|==| in a function, it would be useful to know that the type it is being applied to can have the function applied meaningfully (or at least without errors). One option would be to define a function for every type for which \v|==| is defined. Haskell's typeclasses, however, allow for a much more elegant solution. A typeclass specifies a set of methods that are meaningful to apply to a function. An example of how the equality typeclass might look is:
+\begin{algex}
+  \begin{lstlisting}
+    class Eq a where
+      (==) :: a -> a -> Bool
+  \end{lstlisting}
+\end{algex}
+With this syntax, a new class is created, \v|Eq| for any instance of which, the function \v|(==)| is guaranteed to exist. This is a powerful idea, and gives a mechanism through which contracts can be enforced, while supporting polymorphism.
 
 \subsection{Lazy Evaluation}
+Haskell features lazy evaluation, a technique in which code is not evaluated until it is necessary to do so. In other languages, it is common that an argument being passed to a function must be fully evaluated before the function can begin running, even if the argument is not used, or will not be used in this particular invocation. Haskell, rather, attempts to delay this evaluation until it is absolutely necessary. This allows for interesting language constructs such as infinite lists.
 \subsubsection{Infinite Lists}
-Compare with generators in python
-\subsubsection{Efficient Fibonacci}
-Present a memoized version of the earlier fib function
+Some languages, such as Python and Javascript have generators, which are a generalization of iterators. They are pieces of code that can be called repeatedly to return a sequence of values. Thanks to Haskell's lazy evaluation, this kind of idea is trivial to implement:
+\begin{algex}
+  \begin{lstlisting}
+    ghci> let naturals = [1..]
+    ghci> let squares = [ x^2 | x <- naturals ]
+    ghci> squares !! 0
+    0
+    ghci> squares !! 1
+    1
+    ghci> squares !! 346723
+    120217532176
+  \end{lstlisting}
+\end{algex}
 
 \section{Currying}
+Currying is the idea of taking a function of multiple values and supplying one value to get a new function.
 \subsection{Currying in Category Theory}
+Category theory demonstrates the equivalence between something.
 \subsection{Currying in Haskell}
+All functions take one argument in Haskell. Multi-argument functions are actually functions returning functions. So Haskell functions are curried by default, and intermediate functions can be accessed with the expected syntax.
 \subsection{Comparison of Currying}
 
 \section{Functors}
 \subsection{Functors in Category Theory}
+Functors are mappings from one category to another. In fact, functors are arrows in the category Cat, which has categories as objects. So functors necessarily obey composition. Functors map objects in one category to objects in another, and map arrows in one category to arrows in another such that the composition of arrows in one category is the composition of their mappings in the other. This can be expressed with a commutative diagram.
 \subsection{Functors in Haskell}
+Functors in haskell are a parametric type class. They give a way for a function on one type to be applied to a functor of that type. A list, for example, is a member of the functor typeclass. So any function that can be applied to an element of the list can also be sensibly applied to the list as a whole using a different syntax.
 \subsection{Comparison of Functors}
 
 \section{Monoids}
+Monoids are collections with an operator, such that for any two elements of the set, the result of the operator applied to those two elements is also in the set. As well, there is an identity element which when left or right operated on with any other element results in the other element.
 \subsection{Monoids in Category Theory}
+A monoid is a one object category. The arrows of this category correspond to the elements of the monoid, and composition in the category is the binary operation in the monoid. 
 \subsection{Monoids in Haskell}
+Again, they're a type class. They have a concatenation operation. The prototypical monoid is the list again.
 \subsection{Comparison of Monoids}
+All of the important structure is there. 
 
 \section{Monads}
 \subsection{Monads in Category Theory}
