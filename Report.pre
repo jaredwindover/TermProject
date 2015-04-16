@@ -9,7 +9,6 @@ citestyle=numeric,
 sorting=nty
 ]{biblatex}
 \usepackage{tikz-cd}
-\usepackage{verbatim}
 \usepackage{MathNotes}
 
 %CONFIG
@@ -24,7 +23,8 @@ sorting=nty
   breaklines=false,
   captionpos=b,
   escapeinside={*'}{'*},
-  basicstyle=\ttfamily
+  basicstyle=\ttfamily,
+  showstringspaces=false
 }
 
 \lstset{
@@ -77,12 +77,12 @@ Ontario, Canada\\
 I would like to thank Professor Jonathon Funk for suggesting this research project, meeting with me to discuss my progress and difficulties, and spending his time introducing me to category theory. This paper would not have been possible without his assistance.
 
 \section{Introduction}
-Haskell is a programming language which has steadily risen in popularity since its birth in the 1980's. It can be intimidating for beginners, however. Many of the fundamental concepts in Haskell programming were inspired through varying degrees of analogy by ideas in category theory. To somebody coming across these ideas for the first time, it is unclear whether the ideas are difficult to understand becasue the individual lacks the necessary grounding in category theory, or because they are unfamiliar ideas that must be grappled with. The beginner in graphics programming or game design may benefit from developing a solid base in linear algebra before returning to their study of graphics, and if they do not choose to do that, they will still learn a considerable amount of linear algebra as they go. The question, then, is to what extent Haskell and category theory are analagously coupled. Will one necessarily form the basis for the other, or are they separate conceptual frameworks that share terms, or is it somewhere in between?
+Haskell is a programming language which has steadily risen in popularity since its birth in the 1980's. It can be intimidating for beginners, however. Many of the fundamental concepts in Haskell were inspired by ideas in category theory. To somebody coming across these ideas for the first time, it is unclear whether the ideas are difficult to understand because the individual lacks the necessary grounding in category theory, or because they are unfamiliar ideas that must be grappled with. The beginner in graphics programming or game design may benefit from developing a solid base in linear algebra before returning to their study of graphics, and if they do not choose to do that, they will still learn a considerable amount of linear algebra as they go. The question, then, is to what extent Haskell and category theory are analagously coupled. Does one necessarily form the basis for the other, are they separate conceptual frameworks that share terms, or is it somewhere in between?
 
 \section{Category Theory Primer}
-To begin, an understanding of the basic objects and methods of category theory will be presented. It is in no way intended to be a complete introduction (and would be woefully incomplete if it were), however it is intended to be a very brief sketch of an introduction. Later, when the interplay of ideas in category theory and Haskell is discussed it should be enough to understand the arguments made.
+To begin, an introduction to the basic objects and methods of category theory is presented. It is in no way intended to be a complete introduction (and would be woefully incomplete if it were), however it is intended to give a sense of the field. Later, when the interplay of ideas in category theory and Haskell is discussed it should be enough to understand the arguments made.
 \subsection{Basic Concepts}
-Category theory is, in some sense, the theory of isomorphism. Isomorphism is an important concept in modern mathematics which occurs in many different areas. To say two things are isomorphic is in some way saing that they have the same structure. A non-mathematical example of this would be lowercase letters and uppercase letters. They are different things, serving different purposes and being appropriate in different contexts. There is, however, a common structure between them. One aspect of this is the ordering on the lowercase or uppercase letter. Letters have precedent and/or antecedent letters. Using the obvious mapping between uppercase and lowercase letters (take the uppercase or lowercase of the same letter, $e \leftrightarrow E, h \leftrightarrow H$), this structure is preserved. If there is a lowercase letter with a precedent (e.g. $e$, preceded by $d$) and the uppercase version of its precedent is taken, ($D$), the result is the same as taking the precedent of the uppercase version (e.g. $e\rightarrow E \rightarrow D$). This idea can be made explicit with a commutative diagram.
+Category theory is, in some sense, the theory of isomorphism. Isomorphism is an important concept in modern mathematics which occurs in many different areas. To say two things are isomorphic is in some way saing that they have the same structure. A non-mathematical example of this is lowercase letters and uppercase letters. They are different things, serving different purposes and being appropriate in different contexts. There is, however, a common structure between them. One aspect of this is the ordering on the lowercase and uppercase letter. Letters have precedent and/or antecedent letters. Using the obvious mapping between uppercase and lowercase letters (take the uppercase or lowercase of the same letter, $e \leftrightarrow E, h \leftrightarrow H$), this structure is preserved. If there is a lowercase letter with a precedent (e.g. $e$, preceded by $d$) and the uppercase version of its precedent is taken, ($D$), the result is the same as taking the precedent of the uppercase version (e.g. $e\rightarrow E \rightarrow D$). This idea can be made explicit with a commutative diagram.
 \subsubsection{Commutative Diagrams}
 
 \begin{ex}
@@ -97,7 +97,7 @@ Category theory is, in some sense, the theory of isomorphism. Isomorphism is an 
   \end{equation*}
 \end{ex}
 
-The way to interpret a commutative diagram is that any path of arrows from one point to another is equivalent to any other path between those points (provided that one of the paths has more than one arrow.) So for the above diagram, taking $e$'s precedent, $d$, and then $d$'s upper, $D$, is equivalent to taking $e$'s upper, $E$, and then $E$'s precedent, $D$. This can be generalized if $l$ is allowed to represent the set of lowercase letters, and $U$ is allowed to represent the set of uppercase letters. The sets can be pictured as  
+The way to interpret a commutative diagram is that any path of arrows from one point to another is equivalent to any other path between those points (provided that one of the paths has more than one arrow.) So for the above diagram, taking $e$'s precedent, $d$, and then $d$'s upper, $D$, is equivalent to taking $e$'s upper, $E$, and then $E$'s precedent, $D$. This can be generalized if $l$ is allowed to represent the set of lowercase letters, and $U$ is allowed to represent the set of uppercase letter.  
 
 \begin{equation*}
   \begin{tikzcd}
@@ -108,14 +108,13 @@ The way to interpret a commutative diagram is that any path of arrows from one p
     U \arrow[r,swap,"\text{precedent}"]& U
   \end{tikzcd}
 \end{equation*}
-
 That is to say, $\text{precedent}$ and $\text{upper}$ commute under composition, or $$\text{precedent} \circ \text{upper} = \text{upper} \circ \text{precedent}$$
   
 By reformulating notions from one context into category theory's language of arrows gives new ways of examining problems, and understanding their structures.
 
 \subsection{Properties}
 
-Category theory, in general, is concerned with two types of things, foundationally: objects and arrows. Objects can be anything, and are often (though not always) members of a set. In the above case, there were two objects: the set of lowercase letters and the set of uppercase letters. Arrows have a head and a tail, and may not be fully determined by their head and tail. So, two different arrows may have the same head and tail. An example would be the antecedent arrow. It would have head and tail $l$, but would not be identical to the precedent arrow. As well, if the following diagram exists within a category:
+Category theory, in general, is concerned with two types of things: objects and arrows. Objects can be anything, and are often (though not always) members of a set. In the above case, there are two objects: the set of lowercase letters and the set of uppercase letters. Arrows have a head and a tail, but may not be fully determined by their head and tail. Two different arrows may have the same head and tail. An example is the antecedent arrow. It also has head and tail $l$, but is not identical to the precedent arrow. Also, whenever the following diagram exists within a category:
 
 \begin{equation}
   \begin{tikzcd}
@@ -130,7 +129,7 @@ then the arrow $h$ must also exist as:
   \end{tikzcd}
 \end{equation}
 
-So for any two arrows such that the head of one is the tail of the other, the composition of those arrows must also be an arrow in the category. In particular, for the example above to be a category, the arrows precedent $\circ$ upper and upper $\circ$ precedent would also have to exist. Lastly, for any object $x$ in the category, there must be an arrow $id_x$ with head and tail $x$, such that $\text{id}_x \circ a = a$ and $b \circ \text{id}_x = b$ for any arrows $a$ and $b$ with head and tail, respectively, $x$. So, any object has an identity arrow that acts as a left and right identity under composition with other arrows.
+For any two arrows such that the head of one is the tail of the other, the composition of those arrows must also be an arrow in the category. In particular, for the example above to be a category, the arrows $(\text{precedent} \circ \text{upper})$ and $(\text{upper} \circ \text{precedent})$ would also have to exist. Lastly, for any object $x$ in the category, there must be an arrow $\text{id}_x$ with head and tail $x$, such that $\text{id}_x \circ a = a$ and $b \circ \text{id}_x = b$ for any arrows $a$ and $b$ with head and tail, respectively, $x$. So, any object has an identity arrow that acts as a left and right identity under composition with other arrows.
 
 \subsection{Injectivity and Surjectivity}
 The notions of injectivity and surjectivity can be captured elegantly in a category theoretic way. A function, $f:X\rightarrow Y$ is injective iff $f(x) = f(y) \implies x = y$, and is surjective if $\forall y \in Y \exists x \in X : f(x) = y$, or to put it differently, $f(X) = Y$. 
@@ -213,16 +212,19 @@ $f:X\rightarrow Y$ is surjective if
   \end{tikzcd}
 \end{equation*}
 
-implies that $g = h$. Thus, while the element-wise definitions do not make it clear the relationship between injectivity and surjectivity, or even that there is any kind of symmetry between them, the category theoretic definition demonstrates this symmetry elegantly. In fact, in category theory these are known as dual properties.
+implies that $g = h$. Thus, while the element-wise definitions do not make it clear the relationship between injectivity and surjectivity, or even that there is any kind of symmetry between them, the category theoretic definition demonstrates this symmetry elegantly ~\parencite{ASF}. In fact, in category theory injectivity and surjectivity are known as dual properties.
 
 \section{Haskell Primer}
-Haskell is an open-source, almost purely-functional programming language ~\parencite{WHO}. It was born in the late 1980's out of a desire for a common language for researchers to use in experiments on lazy evaluation ~\parencite{HOH}. Lazy evaluation was a new idea at the time, that calculations can and should in some cases only be performed when it is demonstrably necessary to do so. Haskell is a declarative language, meaning that rather than specifying how to calculate something, what it is is specified, and the details of performing the calculation follow naturally. Haskell being almost purely functional means, roughly, that a function's return value is independent of context. All that it may depend upon are the values that are passed to it. It may also be useful to think of Haskell's identifiers more like mathematical identifiers, rather than typical language constructs. The invocation of a mathematical function does not change depending on the context, or between subsequent invocations. Similarly, functions in a purely functional language will always return the same value dependent only on their parameters. It was found, however, that Haskell would be more useful if the purely functional abstraction was broken in a particular way (the introduction of the IO Monad), and this is why it is only almost purely functional. The language was named after Haskell Curry, an American mathematician whom the founders of the language felt had made significant contributions to their respective areas of study. 
+Haskell is an open-source, almost purely-functional programming language ~\parencite{WHO}. It was born in the late 1980's out of a desire for a common language for researchers to use in experiments on lazy evaluation ~\parencite{HOH}. Lazy evaluation was a new idea at the time, that calculations can and should in some cases only be performed when it is demonstrably necessary to do so. Haskell is a declarative language, meaning that what something is is specified, rather than a procedure for calculating it, and the details of performing the calculation follow naturally. Haskell being almost purely functional means, roughly, that a function's return value is independent of context. All that it may depend upon are the values that are passed to it. It may also be useful to think of Haskell's identifiers more like mathematical identifiers, rather than typical language constructs. The invocation of a mathematical function does not change depending on the context, or between subsequent invocations. Similarly, functions in a purely functional language will always return the same value dependent only on their parameters. It was found, however, that Haskell would be more useful if the purely functional abstraction was broken in a particular way (the introduction of the IO Monad), and this is why it is only almost purely functional. The language was named after Haskell Curry, an American mathematician whom the founders of the language felt had made significant contributions to their respective areas of study~\parencite{HOH}. 
+
+Haskell is a compiled language, for which several open source compilers exist. A popular choice is ghc (Glasgow Haskell Compiler). There is also ghci, a command line REPL for Haskell. In any following code snippets that begin with \v|ghci>|, it is implied that this snippet is taken from an interactive session.
+
 \subsection{Basic Syntax}
-While a ``Hello World'' program can often be instructive, in an introduction to Haskell, it may be more confusing than anything. Instead, the paper will finish by examining a ``Hello World'' program.
+While a ``Hello World'' program can often be instructive, in an introduction to Haskell, it may be more confusing than anything. Instead, near the end a ``Hello World'' program will be examined.
 
 \subsubsection{Type Signatures}
 
-Functions in Haskell are not required to have a type signature, if the type signature can be inferred, however a type signature can also help the code to self-document. The signature of a function gives important information about its usage, and combined with the name can often be enough information to understand what the function does. As an example of this, consider the type signature of \v|id|:
+Functions in Haskell are not required to have a type signature, if the type signature can be inferred. A type signature can help the code to self-document, even when it is not needed, and it is common practice to include it~\parencite{WHO}. The signature of a function gives important information about its usage, and combined with the name can often be enough information to understand what the function does. As an example of this, consider the type signature of \v|id|:
 
 \begin{algex}
   \begin{lstlisting}
@@ -233,8 +235,8 @@ Functions in Haskell are not required to have a type signature, if the type sign
 This type signature is interpreted as, regardless of what type is passed to \v|id|, \v|id| will return a value of the same type. There is in fact only one function which will reliably do that, given that the function cannot have knowledge of what types are possible, and it is difficult to determine the type of an argument at runtime. This is the identity function which returns the argument it is given. We can, in fact, infer its implementation from its type signature!
 
 \begin{lstlisting}
-  id :: a -> a
-  id x = x
+    id :: a -> a
+    id x = x
 \end{lstlisting}
 
 A function can also return a function.
@@ -247,8 +249,10 @@ A function can also return a function.
 
 This function takes an endofunction (a function from a type to the same type) and returns a new endofunction on the same type. The implementation is:
 \begin{lstlisting}
-  applyTwice f x = f $ f x
+    applyTwice f x = f $ f x
 \end{lstlisting}
+
+Note the use of the \v|\d| operator. In Haskell, expressions bind to the left. So the expression \v|f f x| is equivalent to \v|(f f) x|. To write that function correctly using parentheses would require \v|f (f x)|. The dollar sign, forces everything to the right of it to be evaluated before it is passed to the left. So \v|f \d x y z| is eqivalent to \v|f (x y z)| and \v|f \d x \d y \d z| is equivalent to \v|f (x (y (z)))|. Thus, the expression \v|f \d f x| is equivalent to \v|f (f x)|.
 
 We can take this idea further to implement function composition explicitly:
 \begin{algex}
@@ -258,25 +262,24 @@ We can take this idea further to implement function composition explicitly:
   \end{lstlisting}
 \end{algex}
 
-This is a function which takes two functions to return a third, the third being the composition of the first two. It is already defined in Haskell's standard libraries as \v|.|. So the above could be written (redundantly) as:
+This is a function which takes two functions to return a third, the third being the composition of the first two. It is already defined in Haskell's standard libraries as \v|(.)|. So the above could be written (redundantly) as:
 \begin{lstlisting}
-  comp f g = f.g
+    comp f g = f.g
 \end{lstlisting}
 
 The following function uses recursion and pattern matching:
 \begin{algex}
-\begin{lstlisting}[caption={Calculating the fibonacci numbers in Haskell}]
-  fib :: Integer -> Integer
-  fib 0 = 1
-  fib n = (fib $ n - 1) + (fib $ n - 2)
+\begin{lstlisting}
+    fib :: Integer -> Integer
+    fib 0 = 1
+    fib n = (fib $ n - 1) + (fib $ n - 2)
 \end{lstlisting}
 \end{algex}
-This is a complete Haskell function for calculating the $n$th fibonacci number. \v|fib| takes an \v|Integer| as argument and returns an \v|Integer|. Next, the program takes advantage of Haskell's pattern matching facilities to define the result of \v|fib| for two cases. If the argument to \v|fib| is \v|0|, the result is \v|1|. If the argument to \v|fib| is anything else, then \v|fib| is defined recursively as the sum of the previous two fibonacci numbers. 
-
-The syntax should be clear, except for two potential areas of confusion. The first is that function invocations are done as \v|f x| rather than \v|f(x)| as is more common. So \v|(fib n)| is apply the \v|fib| function to the value \v|n| and is equivalent to \v|fib n|. The second potential confusion is the use of the \v|\d| operator. In Haskell, expressions bind to the left. So the expression \v|fib n - 1| is equivalent to \v|(fib n) - 1|. To write that function correctly using parentheses would require \v|fib (n - 1)|. The dollar sign, forces everything to the right of it to be evaluated before it is passed to the left. So \v|f \d x y z| is eqivalent to \v|f (x y z)| and \v|f \d x \d y \d z| is equivalent to \v|f (x (y (z)))|. Thus, the expression \v|(fib \d n - 1) + (fib \d n - 2)| is equivalent to \v|(fib (n - 1)) + (fib (n - 2))|. 
+This is a Haskell function for calculating the $n$th fibonacci number. \v|fib| takes an \v|Integer| as argument and also returns an \v|Integer|. Next, the program takes advantage of Haskell's pattern matching facilities to define the result of \v|fib| for two cases. If the argument to \v|fib| is \v|0|, the result is \v|1|. If the argument to \v|fib| is anything else, then \v|fib| is defined recursively as the sum of the previous two fibonacci numbers. 
+ 
 
 \subsubsection{Type Classes}
-Type classes are similar to interfaces in other language. They allow guarantees to be made about types that are not as strict as specifying the type (instead, the guarantee is that the type is a member of a type class). An instructive example is considering equality testing. There are lots of types for which it is meaningful to test whether or not instances of those types are equal. Numbers, characters and strings jump to mind. A stream type, however, might not be meaningful to test equality (though it might). To use \v|==| in a function, it would be useful to know that the type it is being applied to can have the function applied meaningfully (or at least without errors). One option would be to define a function for every type for which \v|==| is defined. Haskell's typeclasses, however, allow for a much more elegant solution. A typeclass specifies a set of methods that are meaningful to apply to any member of the class. An example of how the equality typeclass might look is:
+Type classes are similar to interfaces in other language~\parencite{WHO}. They allow guarantees to be made about types that are not as strict as specifying the type (instead, the guarantee is that the type is a member of a type class). An instructive example is considering equality testing. There are lots of types for which it is meaningful to test whether or not instances of those types are equal. Numbers, characters and strings jump to mind. A stream type, however, might not be meaningful to test equality (though it also might). To use \v|==| in a function, it would be useful to know that the type it is being applied to can have the function applied meaningfully (or at least without errors). One option would be to define a function for every type for which \v|==| is defined. Haskell's typeclasses, however, allow for a much more elegant solution. A typeclass specifies a set of methods that are meaningful to apply to any member of the class. An example of how the equality typeclass might look is:
 \begin{algex}
   \begin{lstlisting}
     class Eq a where
@@ -288,9 +291,10 @@ With this syntax, a new class is created, \v|Eq| for any instance of which, the 
 A type is declared to be a member of a typeclass by writing that it is an instance of that class, and implementing the methods in the class.
 
 \subsection{Lazy Evaluation}
-Haskell features lazy evaluation, a technique in which code is not evaluated until it is necessary to do so. In other languages, it is common that an argument being passed to a function must be fully evaluated before the function can begin running, even if the argument is not used, or will not be used in this particular invocation. Haskell, rather, attempts to delay this evaluation until it is absolutely necessary. This allows for interesting language constructs such as infinite lists.
+Haskell features lazy evaluation, a technique in which code is not evaluated until it is necessary to do so~\parencite{HOH}. In other languages, it is common that an argument being passed to a function must be fully evaluated before the function can begin running, even if the argument is not used, or will not be used in this particular invocation. Haskell, rather, attempts to delay this evaluation until it is absolutely necessary. This allows for interesting language constructs such as infinite lists.
 \subsubsection{Infinite Lists}
 Some languages, such as Python and Javascript have generators, which are a generalization of iterators. They are pieces of code that can be called repeatedly to return a sequence of values. Thanks to Haskell's lazy evaluation, this kind of idea is trivial to implement:
+%FIXME
 \begin{algex}
   \begin{lstlisting}
     ghci> let naturals = [1..]
@@ -305,9 +309,9 @@ Some languages, such as Python and Javascript have generators, which are a gener
 \end{algex}
 
 \section{Currying}
-It can be shown that if $S,T$ and $V$ are sets, then the set of functions $f:S\times T \rightarrow V$ is isomorphic to the set of functions $g:S\rightarrow [T\rightarrow V]$ where $[T\rightarrow V]$ is the set of functions from $T$ to $V$. This can be written formally as $\text{Hom}_\text{Set}(S\times T,V) \cong \text{Hom}_\text{Set}(S,[T\rightarrow V])$\parencite{CTCS}.
+It can be shown that if $S,T$ and $V$ are sets, then the set of functions $f:S\times T \rightarrow V$ is isomorphic to the set of functions $g:S\rightarrow [T\rightarrow V]$ where $[T\rightarrow V]$ is the set of functions from $T$ to $V$. This can be written formally as $\text{Hom}_\text{Set}(S\times T,V) \cong \text{Hom}_\text{Set}(S,[T\rightarrow V])$~\parencite{CTCS}.
 \subsection{Currying in Haskell}
-All functions in Haskell take exactly one argument. Multi-argument functions are simulated with functions taking exactly one argument and returning a function (which can take the next argument, and so on). So Haskell functions are curried by default, and intermediate functions can be accessed with the expected syntax. Even operators can be curried in Haskell.
+All functions in Haskell take exactly one argument~\parencite{LYHGG}. Multi-argument functions are simulated with functions taking exactly one argument and returning a function (which can take the next argument, and so on). So Haskell functions are curried by default, and intermediate functions can be accessed with the expected syntax. Even operators can be curried in Haskell.
 
 \begin{algex}
   \begin{lstlisting}
@@ -326,7 +330,7 @@ Where ordinarily, a lambda expression would be needed, partially evaluating a fu
 
 Now consider a trivial function:
 \begin{algex}
-\begin{lstlisting}[caption={Applying a function in Haskell}]
+\begin{lstlisting}
   apply :: (a -> b) -> a -> b
 \end{lstlisting}
 \end{algex}
@@ -350,13 +354,18 @@ or even more concisely by taking advantage of the built in identity function \v|
   apply = id
 \end{lstlisting}
 
+Note that manual currying can be accomplished with the use of lambda functions:
+\begin{lstlisting}
+  apply f = \x -> f $ f x
+\end{lstlisting}
+
 \subsection{Comparison of Currying}
-One of Haskell's prime strengths is the ability to reason about programs. If a partially evaluated function could behave differently than its unevaluated counterpart, this would make reasoning more difficult. In languages where partial evaluation is achieved via lambda functions, there is an area where behavior can change, as its left to the programmer to properly pass arguments through. Haskell's form of currying is very similar to the category theory conception, and to the extent of that similarity, it is able to take advantage of the isomorphism. This ability to reason about how a function behaves without considering the context makes it easier to write bug-free code.
+One of Haskell's prime strengths is the ability to reason about programs~\parencite{HOH}. If a partially evaluated function could behave differently than its unevaluated counterpart, this would make reasoning more difficult. In languages where partial evaluation is achieved via lambda functions, there is an area where behavior can change, as its left to the programmer to properly pass arguments through. Haskell's form of currying is very similar to the category theory conception, and to the extent of that similarity, it is able to take advantage of the isomorphism. This ability to reason about how a function behaves without considering the context makes it easier to write bug-free code.
 
 \section{Functors}
-Functors are analogical to arrows. In fact, if objects are taken to be categories (small categories, actually), then letting arrows be functors between those categories induces a category (the category \textbf{Cat}). They give a way to map from one category to another, preserving identity and composition of arrows.
+Functors are analogous to arrows. In fact, if objects are taken to be categories (small categories, actually), then letting arrows be functors between those categories induces a category (the category \textbf{Cat})~\parencite{ASF}. They give a way to map from one category to another, preserving identity and composition of arrows.
  
-Formally, functors are mappings from one category to another. Functors obey composition. Functors map objects in one category to objects in another, and map arrows in one category to arrows in another such that the composition of arrows in one category is the composition of their mappings in the other. This can be expressed with the following commutative diagrams.
+Formally, functors are mappings from one category to another which preserve composition of arrows. Functors map objects in one category to objects in another, and map arrows in one category to arrows in another such that the composition of arrows in one category is the composition of their mappings in the other ~\parencite{ASF}. This can be expressed with the following commutative diagrams.
 \begin{equation*}
   \begin{tikzcd}
     A\arrow[dr,"f"]\arrow[dd,"f\circ g"] & \\
@@ -370,7 +379,6 @@ Formally, functors are mappings from one category to another. Functors obey comp
     FC\\
   \end{tikzcd}
 \end{equation*}
-
 Anywhere that the left diagram appears in the original category, the result of applying the functor to those arguments must have the structure on the right.
 
 \subsection{Functors in Haskell}
@@ -384,7 +392,7 @@ Anywhere that the left diagram appears in the original category, the result of a
     fmap f (x:xs) = (f x) : fmap f xs 
   \end{lstlisting}
 \end{algex}
-Functors in haskell are instances of a parametric type class. A parametric type class can be thought of as a type constructor. It is not a concrete type, but given a concrete type can construct a concrete type. As the above example suggests, a list is a Functor. A list is not a concrete type class, but a list of \v|Num|'s is a concrete type class. Functors give a way for a function on a type to be applied to the functor of that type.So, for example, any function that can be applied to an element of a list can be applied to a list of elements using \v|fmap|.
+Functors in haskell are instances of a parametric type class~\parencite{LYHGG}. A parametric type class can be thought of as a type constructor. It is not a concrete type, but given a concrete type can construct a concrete type. As the above example suggests, a list is a Functor. A list is not a concrete type class, but a list of \v|Num|'s is a concrete type class. Functors give a way for a function on a type to be applied to the functor of that type.So, for example, any function that can be applied to an element of a list can be applied to a list of elements using \v|fmap|.
 
 \begin{algex}
   \begin{lstlisting}
@@ -395,20 +403,20 @@ Functors in haskell are instances of a parametric type class. A parametric type 
   \end{lstlisting}
 \end{algex}
 
-In general, if \v|F| is a functor, \v|f, g| have type signature \v|a -> b|, and \v|b -> c|, respectively, and \v|x| is of type \v|F a| then the following must hold: 
+In general, if (1) \v|F| is a functor, (2) \v|f, g| have type signature \v|a -> b|, and \v|b -> c|, respectively, and (3) \v|x| is of type \v|F a| then the following must hold: 
 \begin{lstlisting}
   fmap g.f x = fmap g $ fmap f x
 \end{lstlisting}
 
 \subsection{Comparison of Functors}
-Haskell functors, being parametric types, construct concrete types from other concrete types. In this way, they map between Haskell types (making them an endofunctor on the category \textbf{Hask}). \v|List|, \v|[]| takes an \v|Int| to create \v|[Int]| or a \v|Bool| to create \v|[Bool]|. \v|fmap| maps functions between initial categories to functions between the mapped categories. As well, \v|fmap| preserves function composition. Haskell's implementation of functors is completely analogous to the category theoretic concept. 
+Haskell functors, being parametric types, construct concrete types from other concrete types. In this way, they map between Haskell types (making them an endofunctor on the category \textbf{Hask})~\parencite{WHO}. \v|List|, \v|[]| takes an \v|Int| to create \v|[Int]| or a \v|Bool| to create \v|[Bool]|. \v|fmap| maps functions between initial categories to functions between the resultant categories. As well, \v|fmap| preserves function composition. Haskell's implementation of functors is completely analogous to the category theoretic concept. 
 
 \section{Monoids}
-Monoids are sets, $X$ with an associative binary operator, $\oplus$, such that for any two elements ,$x,y \in X$, $x\oplus y \in X$. A further conditon is that there is an identity element $e \in X$, such that $e \oplus x = x = x \oplus e\ \forall x \in X$.
+Monoids are sets, $X$ with an associative binary operator, $\oplus$, such that for any two elements, $x,y \in X$, $x\oplus y \in X$. A further conditon is that there is an identity element $e \in X$, such that $e \oplus x = x = x \oplus e\ \forall x \in X$ ~\parencite{CTCS}.
 
-A monoid is also a one object category. The arrows of this category correspond to the elements of the monoid, composition in the category is the binary operation in the monoid and the identity arrow in the category is the identity element in the monoid. 
+A monoid is also a one object category. The arrows of this category correspond to the elements of the monoid, composition in the category is the binary operation in the monoid and the identity arrow in the category is the identity element in the monoid~\parencite{ASF}. 
 \subsection{Monoids in Haskell}
-Monoids in Haskell, like Functors are typeclasses, though they need not be parametric. For example, the set of integers along with multiplication is a monoid (so is the set of integers along with addition). 
+Monoids in Haskell, like Functors, are typeclasses, though they need not be parametric. For example, the set of integers along with multiplication is a monoid. So is the set of integers along with addition. 
 \begin{algex}
   \begin{lstlisting}
     class Monoid m where
@@ -416,15 +424,15 @@ Monoids in Haskell, like Functors are typeclasses, though they need not be param
     mappend :: m -> m -> m
   \end{lstlisting}
 \end{algex}
-
 Monoids are expected to satisfy the following:
+
 \begin{lstlisting}
     mappend mempty x = x
     mappend x mempty = x
     mappend x (mappend y z) = mappend (mappend x y) z
 \end{lstlisting}
-
 Defining the set of integers with addition as a monoid can be done as:
+
 \begin{lstlisting}
     newtype Sum a = Sum a
     instance Num a => Monoid (Sum a) where
@@ -432,7 +440,6 @@ Defining the set of integers with addition as a monoid can be done as:
     mappend Sum x Sum y = Sum (x + y)
 \end{lstlisting}
 So, the identity element is defined to be 0, and appending elements is defined as addition. 
-
 Defining the set of integers with multiplication as a monoid can be done as:
 \begin{lstlisting}
     newtype Product a = Product a
@@ -468,8 +475,10 @@ Monads (also known as triples) can be defined in different (equivalent) ways. Th
       T
     \end{tikzcd}
   \end{equation}
+~\parencite{ASF}
 \end{defn}
 where a natural transformation is defined:
+
 \begin{defn}
   A natural transformation between two functors $F$ and $G$ on a category is a family of arrows $\{\phi_x\}_{x \in \mathcal{I}}$, indexed by the objects of the category such that for any arrow $f$ in the category, the following diagram commutes:
   \begin{equation}
@@ -486,30 +495,115 @@ where a natural transformation is defined:
       Gb \\
     \end{tikzcd}
   \end{equation}
+~\parencite{ASF}
 \end{defn}
 
+
 \subsection{Monads in Haskell}
-The monad typeclass in Haskell is defined as:
+The monad typeclass in Haskell is defined as~\parencite{WHO}:
 \begin{algex}
   \begin{lstlisting}
     class Monad m where
-    (>>=)  :: m a -> (a -> m b) -> m b
     return :: a -> m a
+
+    (>>=) :: m a -> (a -> m b) -> m b
+    x >>= f = join (fmap f x)
+
+    join :: m (m a) -> m a
+    join x = x >>= id
   \end{lstlisting}
 \end{algex}
-Thus, a monad in Haskell is a parametric typeclass (like a functor), which provides a method for taking the parameter of type \v|X| to a \v|Monad X|, and a method for taking a monad and a function that maps from the inner type of the monad to a new monad type and applying it to the given monad. Several examples may be instructive:
-
+Thus, a monad in Haskell is a parametric typeclass (like a functor), which provides three methods: a method for taking the parameter of type \v|X| to a \v|Monad X|, a method for taking a \v|Monad X| and a function that maps from \v|X| to \v|Monad Y| and applying it to the \v|Monad X|, and a method for taking a \v|Monad Monad X| and reducing it to a \v|Monad X|. It is expected that anything being declared as a Monad is already declared as a functor, and will, in fact, be a requirement in a future version of the language standard (originally, Haskell had Monads but not Functors, hence the confusion~\parencite{HOH}). It should be noted that definitions have been provided for two of the methods, but they are mutually recursive. Thus, it is sufficient for a programmer instantiating a monad to provide an implementation for either \v|(>>=)| or \v|join| to also implement the other. A couple of examples may be instructive:
+%FIXME
 \subsubsection{Maybe}
-The maybe monad is used to allow for error conditions to propagate through Haskell code. A Maybe X will be either a Just X or Nothing. So a Maybe Num will be either Just x, where x is a num, or Nothing. Functions applied with fmap 
-\subsubsection{State}
-The state monad is used to allow a function to hold state through repeated executions.
+\begin{algex}
+  \begin{lstlisting}
+    data Maybe t = Just t | Nothing
+
+    instance Monad Maybe where
+    return x = Just x
+    join Nothing = Nothing
+    join Just Nothing = Nothing
+    join Just (Just x) = Just x
+  \end{lstlisting}
+\end{algex}
+
+The maybe monad is used to allow for error conditions to propagate through Haskell code. A \v|Maybe X| will be either a \v|Just X| or \v|Nothing|. So a \v|Maybe Num| will be either \v|Just x|, where \v|x| is a \v|Num|, or \v|Nothing|. Functions applied with \v|fmap| (since Monads are also Functors) will return \v|Nothing| if the argument was nothing, otherwise \v|Just y| where \v|y| is the result of applying the function to the argument. So, a series of functions can be applied with \v|fmap|, each of which will automatically propagate \v|Nothing| values to the top, or just proceed with their execution ~\parencite{LYHGG}.
+
 \subsubsection{IO}
-The IO monad is used to allow a function to communicate with the external world, either by writing to files and devices, or by reading from them. 
+The IO monad is used to allow a function to communicate with the external world, either by writing to files and devices, or by reading from them. A simple ``Hello World'' program can be written as:
+\begin{algex}
+  \begin{lstlisting}
+    main = putStrLn "Hello World!"
+  \end{lstlisting}
+\end{algex}
+where the type of \v|putStrLn| is 
+\begin{lstlisting}
+    ghci> :t putStrLn
+    putStrLn :: String -> IO ()
+\end{lstlisting}
+
+So, \v|putStrLn| is a function that takes a \v|String| and returns a \v|IO ()|. The real power of Monads, however, is in their ability to chain together objects.
+\begin{lstlisting}
+    main = putStrLn "What's your name?" >>
+           getLine >>=
+           \a -> putStr "Hello, " >>
+           putStrLn a
+\end{lstlisting}
+The above program will ask for the user's name, read in the input and then greet the user. While this is already becoming reminiscent of imperative programming, Haskell introduces some syntactic sugar which drives the point home. The above program is equivalent to the following:
+\begin{lstlisting}
+    main = do putStrLn "What's your name?"
+              a <- getLine
+              putStr "Hello, "
+              putStrLn a
+\end{lstlisting}
+
+The above syntax makes complex series of operations very intuitive without sacrificing power or expressivity~\parencite{WHO}.
+
 \subsection{Comparison of Monads}
-Make explicit the relationship!
+While \v|(>>=)| is more commonly focused on in the definition of a monad, it is actually \v|join| which will provide the more obvious connection to category theory. Since a Monad must already be a functor, one piece of the mapping between Haskell's Monad and the category theory triple is obvious. The Functor in the triple is the Monad instance itself! The second two mappings are less obvious, however. \v|return| is actually equivalent to $\eta$ and \v|join| is equivalent to $\mu$. This can be seen by considering the following. Haskell expects the following rules to hold for any instance of a Monad:
+\begin{lstlisting}
+    join . fmap join == join . join
+    join . fmap return == join . return == id
+    join . fmap (fmap f) == fmap f . join
+\end{lstlisting}
+The first rule can be seen to be equivalent to part of the commutative diagram defining Monads:
+
+\begin{equation*}
+  \begin{tikzcd}
+    T^3\arrow[r,"T\mu"]\arrow[d,swap,"\mu T"] 
+    & 
+    T^2\arrow[d,"\mu"] \\
+    T^2\arrow[r,swap,"\mu"] 
+    & 
+    T
+  \end{tikzcd}
+\end{equation*}
+The second rule is equivalent to the other part of the diagram:
+\begin{equation*}
+  \begin{tikzcd}
+    T\arrow[r,"\eta T"]\arrow[dr,swap,"\text{id}_T"] 
+    & 
+    T^2\arrow[d,"\mu"] 
+    & 
+    T\arrow[l,swap,"T\eta"]\arrow[dl,"\text{id}_T"] \\
+    &
+    T
+    & 
+  \end{tikzcd}
+\end{equation*}
+The third rule simply states that for any arrow $f:Ta \rightarrow T^2 b$, the following diagram commutes:
+\begin{equation*}
+  \begin{tikzcd}
+    T^2a \arrow[r,"\mu_a"]\arrow[d,swap,"Tf"] &Ta\arrow[d,"f"]\\
+    T^3b \arrow[r,swap,"\mu_{Tb}"] & T^2b\\
+  \end{tikzcd}
+\end{equation*}
+which follows from $\mu$ being a natural transformation.
+Thus, Haskell's definition of monad can be seen to be equivalent to category theory's definition of Monad.
 
 \section{Conclusion}
-Primarily, Haskell has benefited from category theory through its use of currying as a primitive operation and the inclusion of certain analogical concepts, namely functors, monoids and monads. Its history reflects their relative importance, as the Monad typeclass was added before functors or Monoids were added to the language, and it also provides the most concrete benefit to Haskell. Things such as state, io and error conditions were made possible through the use of Monads, while maintaining a lot of the original benefits of the language's purity. A future direction for research is to make explicit any results of category theory that are being used to Haskell's benefit, or any results which can be applied to the \textbf{Hask} category to gain insight.
+Primarily, Haskell has benefited from category theory through its use of currying as a primitive operation and the inclusion of certain analogous concepts, namely functors, monoids and monads. Its history reflects their relative importance, as the Monad typeclass was added before Functors or Monoids were added to the language, and it also provides the most concrete benefit to Haskell. Things such as state, io and error conditions were made possible through the use of Monads, while maintaining a lot of the original benefits of the language's purity. A future direction for research is to make explicit any results of category theory that are being used to Haskell's benefit, or any results which can be applied to the \textbf{Hask} category to gain insight.
 
 \newpage
 \printbibliography[heading=bibintoc]
