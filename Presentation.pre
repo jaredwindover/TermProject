@@ -1,17 +1,414 @@
 \documentclass{beamer}
-%\usepackage{MathNotes}
-\title{My Presentation}
+\usepackage{tikz-cd}
+\usepackage{amsthm}
+\usepackage{listings}
+\title{Monads in Haskell}
+\subtitle{Prepared for the University of the West Indies}
 \author{Jared Windover}
-\institute{University of the West Indies}
-\date{April 20, 2015}
+\institute{University of Waterloo}
+\date{\today}
+
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[section]
+
 \begin{document}
+
+\lstdefinestyle{Hask}{
+  language=bash,
+  frame=single,
+  tabsize=2,
+  breaklines=false,
+  captionpos=b,
+  escapeinside={*'}{'*},
+  basicstyle=\ttfamily,
+  showstringspaces=false
+}
+
+\lstset{
+  style=Hask
+}
+
+\let\v\lstinline
+
+
 
 \begin{frame}
 \titlepage
 \end{frame}
 
-\begin{frame}{First!}
-This is a frame!
+\section{Introduction}
+\begin{frame}
+  \frametitle{Introduction}
+  \begin{enumerate}
+  \item Supervised by Jonathon Funk
+  \item First time with category theory
+  \item Only mild experience with Haskell 
+  \end{enumerate}
 \end{frame}
+
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Category Theory}
+\begin{frame}[fragile]
+  \frametitle{Introduction to Category Theory}
+  \begin{enumerate}
+  \item Objects and Arrows
+  \item Arrow Composition
+  \item Identity Arrows
+  \item Commutative Diagrams
+  \end{enumerate}
+  \begin{equation*}
+    \begin{tikzcd}
+      A \arrow[r,swap,"f"] \arrow[rr,bend left, "h"] & B\arrow[r,swap, "g"] & C
+    \end{tikzcd}
+    \begin{tikzcd}
+      A \arrow[r,swap,"f"] \arrow[rr,bend left, "f"] & B\arrow[r,swap, "\text{id}_B"] & B
+    \end{tikzcd}
+    \begin{tikzcd}
+      A \arrow[r,swap,"\text{id}_A"] \arrow[rr,bend left, "f"] & A\arrow[r, swap,"f"] & B
+    \end{tikzcd}
+  \end{equation*}
+\end{frame}
+\subsection{Example}
+
+\begin{frame}
+  \frametitle{Example: Injectivity and Surjectivity}
+  
+  \begin{enumerate}
+  \item A function, $f:X\rightarrow Y$ is injective iff $f(x) = f(y) \implies x = y$
+  \item A function, $f:X\rightarrow Y$is surjective iff $f(X) = Y$ 
+  \end{enumerate}
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Characterizing Injectivity}
+  \begin{thm}
+    $f:X\rightarrow Y$ is injective iff $\forall g,h:Z\rightarrow X$, $f\circ g = f\circ h \implies g = h$.
+  \end{thm}
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Characterizing Injectivity}
+  \begin{proof}\renewcommand{\qedsymbol}{}
+    Suppose that $f$ is injective. Consider two functions $g,h:Z\rightarrow X$. Suppose that $f\circ g(z) = f\circ h(z) \ \forall z \in Z$, denoted more compactly as $f\circ g = f\circ h$. Let $z \in Z$. Then 
+    \begin{align*}
+      f\circ g (z) = f\circ h(z) &\implies f(g(z)) = f(h(z)) \\
+                                 &\implies g(z) = h(z)\\
+    \end{align*} 
+    since $f$ is injective. 
+  \end{proof}
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Characterizing Injectivity}
+  \begin{proof}
+    Now, suppose that $f$ is not injective. Then $\exists x_1,x_2 \in X: f(x_1) = f(x_2), x_1 \neq x_2$. Define the following functions:
+    \begin{align*}
+      g&:\{0\}\rightarrow\{x_1,x_2\}:(0)\mapsto x_1 \\
+      h&:\{0\}\rightarrow\{x_1,x_2\}:(0)\mapsto x_2 \\
+    \end{align*} 
+    
+    Then $f\circ g (0) = f(x_1) = f(x_2) = f\circ h (0)$. So $f\circ g = f\circ h$ but $g \neq h$.
+  \end{proof}
+\end{frame}
+\begin{frame}
+  \frametitle{Characterizing Surjectivity}
+  \begin{thm}
+    $f:X\rightarrow Y$ is surjective iff $\forall g,h:Y\rightarrow Z$, $g\circ f = h\circ f \implies g = h$.
+  \end{thm}
+\end{frame}
+\begin{frame}
+  \frametitle{Characterizing Surjectivity}
+\begin{proof}\renewcommand{\qedsymbol}{}
+Suppose that $f$ is surjective. Consider two functions, $g,h:Y\rightarrow Z$ such that $g \circ f = h \circ f$. Let $y \in Y$. Then $\exists x \in X$ such that $f(x) = y$. So 
+\begin{align*}
+  g(y) &= g(f(x))\\
+       &= g\circ f (x)\\
+       &= h\circ f (x)\\
+       &= h(f(x))\\
+       &= h(y)\\
+\end{align*}
+
+Thus, $g = h$.
+\end{proof}
+\end{frame}
+\begin{frame}
+  \frametitle{Characterizing Surjectivity}
+  \begin{proof}
+    Now suppose that $f$ is not surjective. Then $\exists y_0 \in Y$, such that there is no $x\in X$ with $f(x) = y_0$. Define the following two functions:
+    \begin{align*}
+      g&:Y\rightarrow \{0,1\}:(y)\mapsto 0\\
+      h&:Y\rightarrow \{0,1\}:(y)\mapsto\left\{
+         \begin{array}{ll}
+           1 & y = y_0\\
+           0 & \text{otherwise}
+         \end{array}
+               \right.
+    \end{align*}
+    Then let $x \in X$. $f(x) \neq y_0$.
+    \begin{align*}
+      g\circ f (x) &=g (f (x))\\
+                   &= 0 \\
+                   &= h \circ f (x)\\
+    \end{align*}
+    So $g\circ f = h\circ f$ but $h \neq g$.
+\end{proof}
+
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Diagrams}
+  \begin{enumerate}
+  \item 
+    $f:X\rightarrow Y$ is injective iff
+    \begin{equation*}
+      \begin{tikzcd}
+        Z \arrow[r,yshift=0.7ex,"g"]\arrow[r,swap,yshift=-0.7ex,"h"] 
+        & X \arrow[r,"f"]
+        & Y
+      \end{tikzcd}
+    \end{equation*}
+    implies that $g = h$.
+  \item
+  $f:X\rightarrow Y$ is surjective if
+  \begin{equation*}
+    \begin{tikzcd}
+      X \arrow[r,"f"]
+      & Y \arrow[r,yshift=0.7ex,"g"]\arrow[r,swap,yshift=-0.7ex,"h"] 
+      & Z
+    \end{tikzcd}
+  \end{equation*}
+  implies that $g = h$.
+  \end{enumerate}
+\end{frame}
+
+\section{Haskell}
+\begin{frame}
+  \frametitle{Introduction to Haskell}
+  \begin{enumerate}
+  \item Open Source
+  \item Purely Functional
+  \item Lazy
+  \end{enumerate}
+\end{frame}
+\begin{frame}
+  \frametitle{Introduction to Haskell}
+  \begin{enumerate}
+  \item Open Source
+  \item \textbf{Almost} Purely Functional
+  \item Lazy
+  \end{enumerate}
+\end{frame}
+\subsection{Type Classes}
+\begin{frame}[fragile]
+  \frametitle{Type Classes}
+  \begin{enumerate}
+  \item Like interfaces
+  \item Allow polymorphism
+  \item
+    \begin{lstlisting}
+class Eq a where
+(==) :: a -> a -> Bool
+
+foo (Eq a) => a -> [a] -> Bool
+    \end{lstlisting}
+  \end{enumerate}
+\end{frame}
+
+\section{Functors}
+\begin{frame}[fragile]
+  \frametitle{Functors in Category Theory}
+  \begin{enumerate}
+  \item arrows in \textbf{Cat}
+  \item preserve composition
+  \end{enumerate}
+  \begin{equation*}
+    \begin{tikzcd}
+      A\arrow[dr,"f"]\arrow[dd,"f\circ g"] & \\
+      & B\arrow[dl,"g"]\\
+      C & \\
+    \end{tikzcd}
+    \implies
+    \begin{tikzcd}
+      FA\arrow[dr,"Ff"]\arrow[dd,"F(f\circ g)"] &\\
+      & FB\arrow[dl,"Fg"]\\
+      FC\\
+    \end{tikzcd}
+  \end{equation*}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Functors in Haskell}
+  \begin{lstlisting}
+class Functor f  where
+fmap :: (a -> b) -> f a -> f b
+
+instance Functor [] where
+fmap _ [] = []
+fmap f (x:xs) = (f x) : fmap f xs 
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Comparison of Functors}
+  \begin{enumerate}
+  \item Haskell types are objects in \textbf{Hask}
+  \item Haskell functions are arrows in \textbf{Hask}
+  \item parametric type class $\Leftrightarrow$ mapping objects
+  \item \v|fmap| $\leftrightarrow$ mapping arrows
+  \end{enumerate}
+\end{frame}
+
+\section{Monads}
+\begin{frame}[fragile]
+  \frametitle{Natural Transformation}
+  \begin{defn}
+    A natural transformation between two functors $F$ and $G$ on a category is a family of arrows $\{\phi_x\}_{x \in \mathcal{I}}$, indexed by the objects of the category such that for any arrow $f$ in the category, the following diagram commutes:
+    \begin{equation*}
+      \begin{tikzcd}
+        a\arrow[d,swap, "f"] 
+        & 
+        Fa \arrow[r, "\phi_a"] \arrow[d,swap,"Ff"]
+        & 
+        Ga \arrow[d,"Gf"]\\
+        b 
+        & 
+        Fb \arrow[r,swap,"\phi_b"]
+        & 
+        Gb \\
+      \end{tikzcd}
+    \end{equation*}
+  \end{defn}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Monads in Category Theory}
+
+  \begin{defn}
+    A Triple $(T,\eta,\mu)$ consists of a functor $T$, and two natural transformations, $\eta$ and $\mu$ such that the following diagrams commute:
+    \begin{equation}
+      \begin{tikzcd}
+        T\arrow[r,"\eta T"]\arrow[dr,swap,"\text{id}_T"] 
+        & 
+        T^2\arrow[d,"\mu"] 
+        & 
+        T\arrow[l,swap,"T\eta"]\arrow[dl,"\text{id}_T"]
+        &
+        T^3\arrow[r,"T\mu"]\arrow[d,swap,"\mu T"] 
+        & 
+        T^2\arrow[d,"\mu"] \\
+        & 
+        T 
+        &
+        &
+        T^2\arrow[r,swap,"\mu"] 
+        & 
+        T
+      \end{tikzcd}
+    \end{equation}
+  \end{defn}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Monads in Haskell}
+  \begin{lstlisting}
+class Monad m where
+return :: a -> m a
+
+(>>=) :: m a -> (a -> m b) -> m b
+x >>= f = join (fmap f x)
+
+join :: m (m a) -> m a
+join x = x >>= id
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Maybe Monad}
+  \begin{lstlisting}
+data Maybe t = Just t | Nothing
+
+instance Monad Maybe where
+return x = Just x
+join Nothing = Nothing
+join Just Nothing = Nothing
+join Just (Just x) = Just x
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{IO Monad and Syntactic Sugar}
+  \begin{lstlisting}
+main = putStrLn "What's your name?" >>
+       getLine >>=
+       \a -> putStr "Hello, " >>
+       putStrLn a
+  \end{lstlisting}
+\begin{lstlisting}
+main = do putStrLn "What's your name?"
+          a <- getLine
+          putStr "Hello, "
+          putStrLn a
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Comparison of Monads}
+\begin{lstlisting}
+    join . fmap join == join . join
+    join . fmap return == join . return == id
+    join . fmap (fmap f) == fmap f . join
+\end{lstlisting}
+\begin{equation*}
+  \begin{tikzcd}
+    T^3\arrow[r,"T\mu"]\arrow[d,swap,"\mu T"] 
+    & 
+    T^2\arrow[d,"\mu"]
+    &
+    T\arrow[r,"\eta T"]\arrow[dr,swap,"\text{id}_T"] 
+    & 
+    T^2\arrow[d,"\mu"] 
+    & 
+    T\arrow[l,swap,"T\eta"]\arrow[dl,"\text{id}_T"] 
+    &
+    T^2a \arrow[r,"\mu_a"]\arrow[d,swap,"Tf"] 
+    &
+    Ta\arrow[d,"f"]\\
+    T^2\arrow[r,swap,"\mu"] 
+    & 
+    T
+    &
+    &
+    T
+    &
+    &
+    T^3b \arrow[r,swap,"\mu_{Tb}"] 
+    & 
+    T^2b\\ 
+  \end{tikzcd}
+\end{equation*}
+\end{frame}
+
+\section{Conclusion}
+\begin{frame}
+  \frametitle{Conclusion}
+  \begin{enumerate}
+  \item Monads are completely analagous concepts
+  \item Haskell is almost pure
+  \item Still useful
+  \item Easy to reason about
+  \item Improved syntax
+  \end{enumerate}
+Does category theory have any applications to Haskell?
+
+Does Haskell use any results from category theory?
+\end{frame}
+\begin{frame}
+  \frametitle{Questions?}
+\end{frame}
+
 
 \end{document}

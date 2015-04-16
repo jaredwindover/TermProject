@@ -1,6 +1,5 @@
 % -*- compile-command: "make -B Report.pdf clean" -*-
 \documentclass{article}
-\usepackage{lipsum}
 \usepackage[nottoc,numbib]{tocbibind}
 \usepackage[
 backend=bibtex,
