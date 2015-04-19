@@ -3,7 +3,7 @@
 \usepackage{amsthm}
 \usepackage{listings}
 \title{Monads in Haskell}
-\subtitle{Prepared for the University of the West Indies}
+\subtitle{Prepared for the University of the West Indies\\Supervised by Professor Jonathon Funk}
 \author{Jared Windover}
 \institute{University of Waterloo}
 \date{\today}
@@ -40,16 +40,6 @@
 \titlepage
 \end{frame}
 
-\section{Introduction}
-\begin{frame}
-  \frametitle{Introduction}
-  \begin{enumerate}
-  \item Supervised by Jonathon Funk
-  \item First time with category theory
-  \item Only mild experience with Haskell 
-  \end{enumerate}
-\end{frame}
-
 \begin{frame}
 \frametitle{Outline}
 \tableofcontents
@@ -60,8 +50,12 @@
   \frametitle{Introduction to Category Theory}
   \begin{enumerate}
   \item Objects and Arrows
-  \item Arrow Composition
-  \item Identity Arrows
+  \item Laws:
+    \begin{enumerate}
+    \item Arrow Composition
+    \item Arrow Associativity
+    \item Identity Arrows
+    \end{enumerate}
   \item Commutative Diagrams
   \end{enumerate}
   \begin{equation*}
@@ -69,21 +63,22 @@
       A \arrow[r,swap,"f"] \arrow[rr,bend left, "h"] & B\arrow[r,swap, "g"] & C
     \end{tikzcd}
     \begin{tikzcd}
-      A \arrow[r,swap,"f"] \arrow[rr,bend left, "f"] & B\arrow[r,swap, "\text{id}_B"] & B
+      A\arrow[d,swap,"f"]\arrow[r,"f\circ g"] & C\arrow[d,"h"]\\
+      B\arrow[r,swap,"g \circ h"]\arrow[ur,"g"] & D\\
     \end{tikzcd}
     \begin{tikzcd}
-      A \arrow[r,swap,"\text{id}_A"] \arrow[rr,bend left, "f"] & A\arrow[r, swap,"f"] & B
+      A \arrow[r,swap,"\text{id}_A"]\arrow[rr,swap,bend right, "f"] & A \arrow[r,swap,"f"] \arrow[rr,bend left, "f"] & B\arrow[r,swap, "\text{id}_B"] & B
     \end{tikzcd}
   \end{equation*}
 \end{frame}
-\subsection{Example}
+\subsection{Injective and Surjective}
 
 \begin{frame}
   \frametitle{Example: Injectivity and Surjectivity}
   
   \begin{enumerate}
-  \item A function, $f:X\rightarrow Y$ is injective iff $f(x) = f(y) \implies x = y$
-  \item A function, $f:X\rightarrow Y$is surjective iff $f(X) = Y$ 
+  \item A function, $f:X\rightarrow Y$ is injective iff $\forall x,y \in X, f(x) = f(y) \implies x = y$
+  \item A function, $f:X\rightarrow Y$ is surjective iff $f(X) = Y$ 
   \end{enumerate}
 \end{frame}
 \begin{frame}[fragile]
@@ -161,6 +156,7 @@ Thus, $g = h$.
 \end{frame}
 \begin{frame}[fragile]
   \frametitle{Diagrams}
+Sets and functions between them form a category!
   \begin{enumerate}
   \item 
     $f:X\rightarrow Y$ is injective iff
@@ -206,14 +202,19 @@ Thus, $g = h$.
 \begin{frame}[fragile]
   \frametitle{Type Classes}
   \begin{enumerate}
-  \item Like interfaces
+  \item Like interfaces in Java
   \item Allow polymorphism
   \item
     \begin{lstlisting}
 class Eq a where
 (==) :: a -> a -> Bool
-
-foo (Eq a) => a -> [a] -> Bool
+    \end{lstlisting}
+    \begin{lstlisting}
+foo :: (Eq a) => a -> [a] -> Bool
+    \end{lstlisting}
+    \begin{lstlisting}
+instance Eq Bar where
+x == y = baz x y
     \end{lstlisting}
   \end{enumerate}
 \end{frame}
@@ -222,30 +223,31 @@ foo (Eq a) => a -> [a] -> Bool
 \begin{frame}[fragile]
   \frametitle{Functors in Category Theory}
   \begin{enumerate}
-  \item arrows in \textbf{Cat}
-  \item preserve composition
+  \item  Map arrows and objects in one category to arrows and objects in another preserving composition
+    \begin{equation*}
+      \begin{tikzcd}
+        A\arrow[dr,"f"]\arrow[dd,"f\circ g"] & \\
+        & B\arrow[dl,"g"]\\
+        C & \\
+      \end{tikzcd}
+      \implies
+      \begin{tikzcd}
+        FA\arrow[dr,"Ff"]\arrow[dd,"F(f\circ g)"] &\\
+        & FB\arrow[dl,"Fg"]\\
+        FC\\
+      \end{tikzcd}
+    \end{equation*}
+  \item  Preserve identity arrows: $F(\text{id}_A) = id_{FA}$
   \end{enumerate}
-  \begin{equation*}
-    \begin{tikzcd}
-      A\arrow[dr,"f"]\arrow[dd,"f\circ g"] & \\
-      & B\arrow[dl,"g"]\\
-      C & \\
-    \end{tikzcd}
-    \implies
-    \begin{tikzcd}
-      FA\arrow[dr,"Ff"]\arrow[dd,"F(f\circ g)"] &\\
-      & FB\arrow[dl,"Fg"]\\
-      FC\\
-    \end{tikzcd}
-  \end{equation*}
 \end{frame}
 
 \begin{frame}[fragile]
   \frametitle{Functors in Haskell}
   \begin{lstlisting}
-class Functor f  where
-fmap :: (a -> b) -> f a -> f b
-
+class Functor F  where
+fmap :: (a -> b) -> F a -> F b
+  \end{lstlisting}
+  \begin{lstlisting}
 instance Functor [] where
 fmap _ [] = []
 fmap f (x:xs) = (f x) : fmap f xs 
@@ -253,12 +255,12 @@ fmap f (x:xs) = (f x) : fmap f xs
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{Comparison of Functors}
+  \frametitle{Comparison of Functors in Haskell and Category Theory}
   \begin{enumerate}
   \item Haskell types are objects in \textbf{Hask}
   \item Haskell functions are arrows in \textbf{Hask}
-  \item parametric type class $\Leftrightarrow$ mapping objects
-  \item \v|fmap| $\leftrightarrow$ mapping arrows
+  \item parametric type class $\Leftrightarrow$ mapping between objects
+  \item \v|fmap| $\leftrightarrow$ mapping between arrows
   \end{enumerate}
 \end{frame}
 
@@ -266,7 +268,7 @@ fmap f (x:xs) = (f x) : fmap f xs
 \begin{frame}[fragile]
   \frametitle{Natural Transformation}
   \begin{defn}
-    A natural transformation between two functors $F$ and $G$ on a category is a family of arrows $\{\phi_x\}_{x \in \mathcal{I}}$, indexed by the objects of the category such that for any arrow $f$ in the category, the following diagram commutes:
+    A natural transformation between two functors $F$ and $G$ on a category is a family of arrows $\{\phi_a\}$, indexed by the objects of the category such that for any arrow $f$ in the category, the following diagram commutes:
     \begin{equation*}
       \begin{tikzcd}
         a\arrow[d,swap, "f"] 
@@ -288,7 +290,7 @@ fmap f (x:xs) = (f x) : fmap f xs
   \frametitle{Monads in Category Theory}
 
   \begin{defn}
-    A Triple $(T,\eta,\mu)$ consists of a functor $T$, and two natural transformations, $\eta$ and $\mu$ such that the following diagrams commute:
+    A Monad $(T,\eta,\mu)$ consists of a functor $T$, and two natural transformations, $\eta$ and $\mu$ such that the following diagrams commute:
     \begin{equation}
       \begin{tikzcd}
         T\arrow[r,"\eta T"]\arrow[dr,swap,"\text{id}_T"] 
@@ -312,19 +314,6 @@ fmap f (x:xs) = (f x) : fmap f xs
   \end{defn}
 \end{frame}
 
-\begin{frame}[fragile]
-  \frametitle{Monads in Haskell}
-  \begin{lstlisting}
-class Monad m where
-return :: a -> m a
-
-(>>=) :: m a -> (a -> m b) -> m b
-x >>= f = join (fmap f x)
-
-join :: m (m a) -> m a
-join x = x >>= id
-  \end{lstlisting}
-\end{frame}
 
 \begin{frame}[fragile]
   \frametitle{Maybe Monad}
@@ -353,6 +342,21 @@ main = do putStrLn "What's your name?"
           putStr "Hello, "
           putStrLn a
 \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Monads in Haskell}
+  \begin{lstlisting}
+class Monad m where
+return :: a -> m a
+
+(>>=) :: m a -> (a -> m b) -> m b
+x >>= f = join (fmap f x)
+
+join :: m (m a) -> m a
+join x = x >>= id
+  \end{lstlisting}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -398,7 +402,7 @@ main = do putStrLn "What's your name?"
   \begin{enumerate}
   \item Monads are completely analagous concepts
   \item Haskell is almost pure
-  \item Still useful
+  \item Language is more useful
   \item Easy to reason about
   \item Improved syntax
   \end{enumerate}
